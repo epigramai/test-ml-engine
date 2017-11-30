@@ -33,8 +33,6 @@ def predict_json(project, model, instances, version=None):
     if 'error' in response:
         raise RuntimeError(response['error'])
 
-    print(response)
-
     return response['predictions']
 
 
@@ -42,28 +40,36 @@ if __name__ == '__main__':
     import cv2
     import time
 
+    PROJECT = 'test-gcloud-ml-deploy'
+    MODEL = 'test'
+    VERSION = 'v1'
+    NUM_REQUESTS = 10
+
     img = cv2.imread('./img_71509.jpg')
     print(img.shape)
-    img_height, img_width, _ = img.shape
-    base_heigth = 150
-    img = cv2.resize(img, (int((img_width / img_height) * base_heigth), base_heigth))
-    print(img.shape)
+
+    # Uncomment this if you want to resize image
+    # img_height, img_width, _ = img.shape
+    # base_heigth = 50
+    # img = cv2.resize(img, (int((img_width / img_height) * base_heigth), base_heigth))
+    # print(img.shape)
 
     total_time = 0
 
-    for i in range(20):
+    for i in range(NUM_REQUESTS):
         t = time.time()
         print('doing req {}'.format(i))
 
         try:
-            preds = predict_json('test-gcloud-ml-deploy', 'test', {'inputs': img.tolist()}, version='v1')
+            preds = predict_json(PROJECT, MODEL, {'inputs': img.tolist()}, version=VERSION)
+            req_time = time.time() - t
+            print(len(preds))
+            print('took {} seconds'.format(req_time))
         except Exception as e:
+            req_time = time.time() - t
             print(e)
 
-        print(len(preds))
-        req_time = time.time() - t
-        print('took {} seconds'.format(req_time))
         total_time += req_time
         time.sleep(2)
 
-    print('avg {} seconds'.format(total_time / 10))
+    print('avg {} seconds'.format(total_time / NUM_REQUESTS))
